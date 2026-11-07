@@ -14,6 +14,8 @@ namespace dvr { namespace status { class Writer; } }
 namespace dvr::snap {
 bool enabled();
 void set_enabled(bool on, const char* who);   // the live A/B
+float angle_deg();
+void set_angle_deg(float deg, const char* who);   // [Turning] SnapAngle, clamped 5..180
 // PRESENT lane, once per UpdateVirtualPad, after every block that takes the right stick for
 // navigation has zeroed it. `rxWouldTurn` = the composed RX is nonzero. Returns true when RX
 // must be zeroed before it reaches the game (the step replaces the smooth turn).

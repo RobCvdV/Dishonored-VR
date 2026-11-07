@@ -143,6 +143,13 @@ void mark(const char* who) {
 
 bool enabled() { return g_on.load(); }
 
+float angle_deg() { return g_angleDeg; }
+
+void set_angle_deg(float deg, const char* who) {
+    g_angleDeg = clampf(deg, 5.0f, 180.0f, "SnapAngle");
+    Log("snap: angle %.0f deg by %s (live)", g_angleDeg, who ? who : "?");
+}
+
 void set_enabled(bool on, const char* who) {
     g_on.store(on);
     d_armed.store(false);   // a stick already deflected at the toggle must come back under rearm first
