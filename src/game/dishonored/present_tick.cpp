@@ -7,6 +7,8 @@
 // verbatim; line numbers in their comments refer to the original single file
 // (src/dllmain.cpp at commit 48766c07).
 
+static void DvrModMenuTick();   // core/ui/modloader_menu.cpp: MODS menu writes land on this thread
+
 // Every present, even with VR disabled: the debugging surface.
 static void DvrPreTick(IDirect3DDevice9*)
 {
@@ -14,6 +16,7 @@ static void DvrPreTick(IDirect3DDevice9*)
         // "[game] state:" transition line, and the crash filter re-arm
         double nowMs = MaimNowMs();
         dvr::command::poll(nowMs);
+        DvrModMenuTick();
         dvr::perf::part_mark("pt.seamPoll");
         dvr::status::tick(nowMs);
         dvr::perf::part_mark("pt.statusJson");

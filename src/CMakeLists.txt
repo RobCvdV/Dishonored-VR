@@ -199,6 +199,15 @@ if(DVR_WITH_OPENXR AND DVR_WITH_OVRSHIM)
     # D3D11 the compositing pipeline needs is linked.
 endif()
 
+# --- DishonoredVR.dll - the Dishonored Mod Loader plugin (shipped) -------------
+# Goes in Binaries\Win32\Mods\plugins. It only forwards the loader's calls to d3d9.dll
+# (core/ui/modloader_menu.cpp); without the Mod Loader it is never loaded.
+add_library(dvr_modmenu_plugin SHARED
+    tools/modmenu_plugin/modmenu_plugin.cpp
+    tools/modmenu_plugin/modmenu_plugin.def
+)
+set_target_properties(dvr_modmenu_plugin PROPERTIES PREFIX "" OUTPUT_NAME "DishonoredVR")
+
 if(DVR_WITH_OPENXR)
     add_executable(xr_hello32 tools/xr_hello32/main.cpp)
     target_link_libraries(xr_hello32 PRIVATE openxr_loader d3d11 dxgi)

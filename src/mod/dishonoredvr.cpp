@@ -369,3 +369,6 @@
 #define DVR_CAT ::dvr::log::Cat::cmd
 #include "game/dishonored/commands.cpp"
 #undef DVR_CAT
+#define DVR_CAT ::dvr::log::Cat::overlay
+#include "core/ui/modloader_menu.cpp"   // the MODS menu entries for Dishonored Mod Loader (after every setter it calls)
+#undef DVR_CAT
