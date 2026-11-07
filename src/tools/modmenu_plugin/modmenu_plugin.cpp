@@ -22,6 +22,10 @@ extern "C" void __cdecl Plg_Init(const char*) {}
 extern "C" const void* __cdecl Plg_Query()
 {
     if (!vr_query()) g_info.description = L"The Dishonored VR mod is not running.";
+    else if (HMODULE vr = GetModuleHandleW(L"d3d9.dll")) {   // the shortcut the player has set
+        typedef const wchar_t* (__cdecl* DescFn)();
+        if (DescFn d = (DescFn)GetProcAddress(vr, "DvrModMenuDescription")) if (const wchar_t* t = d()) g_info.description = t;
+    }
     return &g_info;
 }
 

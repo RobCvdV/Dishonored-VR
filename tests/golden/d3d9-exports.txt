@@ -12,3 +12,4 @@ D3DPERF_QueryRepeatFrame
 DvrReShadeAddonSetActive
 DvrReShadePresentCallback
 DvrModMenuQuery
+DvrModMenuDescription

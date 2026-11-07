@@ -15,3 +15,4 @@ EXPORTS
     DvrReShadeAddonSetActive
     DvrReShadePresentCallback
     DvrModMenuQuery
+    DvrModMenuDescription

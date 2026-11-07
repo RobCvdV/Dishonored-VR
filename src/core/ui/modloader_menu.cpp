@@ -79,7 +79,7 @@ static Item g_items[] = {
     T(L"Pause X+Y", G_CONTROLS),
     C(L"Save: Y+", 3, kPartner, G_CONTROLS),
     C(L"Load: Y+", 3, kPartner, G_CONTROLS),
-    T(L"F10: Y+R3", G_CONTROLS),
+    T(L"Panel: Y+R3", G_CONTROLS),
 };
 // what each visible row drives (same order as g_items)
 static const int kRowId[] = {
@@ -327,3 +327,12 @@ static const Menu* query()
 static void DvrModMenuTick() { dvr::modmenu::tick(); }
 
 extern "C" const void* __cdecl DvrModMenuQuery() { return dvr::modmenu::query(); }
+
+// The MODS list's description line: where the full VR settings panel is, in controller terms.
+// Read once when the loader starts, so it shows the shortcut set at that time.
+extern "C" const wchar_t* __cdecl DvrModMenuDescription()
+{
+    return dvr::controller::config().panelChord
+        ? L"Main VR settings. All of them: hold Y and click the right stick."
+        : L"Main VR settings. All of them: F10 on the keyboard.";
+}
