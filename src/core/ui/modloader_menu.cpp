@@ -26,10 +26,10 @@ struct Menu { uint32_t size, version, flags, count; const Item* items;
 static_assert(sizeof(Item) == 0x24, "Mod Loader v3 item is 36 bytes");
 static_assert(sizeof(Menu) == 0x24, "Mod Loader v3 menu header is 36 bytes");
 
-enum Group { G_DISPLAY, G_COMFORT, G_AIM, G_HANDS, G_CONTROLS, G_CINE, G_HUD, G_COUNT };
-static const wchar_t* const kGroups[G_COUNT] = {
-    L"Display", L"Comfort and movement", L"Aiming", L"Hands and grabbing", L"Controls",
-    L"Cutscenes and peeking", L"HUD" };
+// Labels stay short (the selected row truncates long ones and hides the value); the group says
+// what they belong to. The rest of the settings live in F10.
+enum Group { G_DISPLAY, G_COMFORT, G_AIM, G_GRAB, G_CONTROLS, G_COUNT };
+static const wchar_t* const kGroups[G_COUNT] = { L"Display", L"Comfort", L"Aiming", L"Grabbing", L"Controls" };
 
 enum Id {
     RES, UPSCALE_ON, UPSCALER, UPSCALE_MODE, SHARPEN, FOV, MIRROR_OFF, RAIN_HIDE,
@@ -38,14 +38,13 @@ enum Id {
     PICKUP, DOORS, CARRY, USABLES, ANIM_MANTLE, ANIM_TAKEDOWN, ANIM_CINE,
     DPAD, DPAD_FLIP, PAUSE_CHORD, QUICK_SAVE, QUICK_LOAD, PANEL_CHORD,
     CINE_PITCH, CINE_ROLL, CINE_FOV, CINE_FOV_MATCH, CINE_BORDERS, SPECIAL_HEAD,
-    HUD_PANELS, COUNT };
-static_assert(COUNT <= 48, "the Mod Loader takes at most 48 entries");
+    HUD_PANELS, AIM_ALL, UPSCALE, COUNT };
 
-static const wchar_t* const kDpad[]     = { L"Off", L"Right thumbrest", L"R3 (right stick click)", L"Left thumbrest" };
+static const wchar_t* const kDpad[]     = { L"Off", L"R thumbrest", L"R3 click", L"L thumbrest" };
 static const int            kDpadMode[] = { dvr::controller::Off, dvr::controller::RightRest,
                                             dvr::controller::R3, dvr::controller::LeftRest };
 static const wchar_t* const kPartner[]  = { L"Off", L"A", L"B" };
-static const wchar_t* const kUpscaler[] = { L"NVIDIA DLSS", L"AMD FSR" };
+static const wchar_t* const kUpscaler[] = { L"Off", L"DLSS", L"FSR" };
 static const wchar_t* const kHand[]     = { L"Left", L"Right" };
 static wchar_t              g_modeNames[dvr::dlss::QCount][48];
 static const wchar_t*       g_modeList[dvr::dlss::QCount];
@@ -53,57 +52,46 @@ static const wchar_t*       g_modeList[dvr::dlss::QCount];
 #define T(label, g)                 { 0, label, 0, nullptr, 0, 0, 0, nullptr, g }
 #define C(label, n, list, g)        { 1, label, n, list, 0, 0, 0, nullptr, g }
 #define S(label, lo, hi, st, u, g)  { 3, label, 0, nullptr, lo, hi, st, u, g }
-static Item g_items[COUNT] = {
-    S(L"Render resolution (total pixels)", 50, 300, 10, L"%", G_DISPLAY),
-    T(L"Upscaling / anti-aliasing", G_DISPLAY),
-    C(L"Upscaler", 2, kUpscaler, G_DISPLAY),
-    C(L"Upscaler mode", dvr::dlss::QCount, g_modeList, G_DISPLAY),
+static Item g_items[] = {
+    S(L"Resolution", 50, 300, 10, L"%", G_DISPLAY),
+    C(L"Upscaler", 3, kUpscaler, G_DISPLAY),
+    C(L"Upscale mode", dvr::dlss::QCount, g_modeList, G_DISPLAY),
     S(L"Sharpening", 0, 100, 5, L"%", G_DISPLAY),
-    S(L"Gameplay field of view", 60, 120, 1, L" deg", G_DISPLAY),
-    T(L"Disable desktop mirror (faster)", G_DISPLAY),
-    T(L"Hide close rain overlay", G_DISPLAY),
-
-    T(L"Real crouching crouches Corvo", G_COMFORT),
+    S(L"FOV", 60, 120, 1, L" deg", G_DISPLAY),
+    T(L"PC mirror off", G_DISPLAY),
+    T(L"Hide face rain", G_DISPLAY),
+    T(L"HUD panels", G_DISPLAY),
+    T(L"Real crouch", G_COMFORT),
     T(L"Snap turn", G_COMFORT),
-    S(L"Snap turn angle", 15, 90, 15, L" deg", G_COMFORT),
-    T(L"Positional head tracking", G_COMFORT),
-    T(L"Walk where you look", G_COMFORT),
-
+    S(L"Snap angle", 15, 90, 15, L" deg", G_COMFORT),
+    T(L"Head tracking", G_COMFORT),
+    T(L"Walk to view", G_COMFORT),
     T(L"Aim dot", G_AIM),
     T(L"Aim laser", G_AIM),
-    C(L"Aim dot hand", 2, kHand, G_AIM),
-    T(L"Controller aims: crossbow and pistol", G_AIM),
-    T(L"Controller aims: Blink", G_AIM),
-    T(L"Controller aims: interactions", G_AIM),
-    T(L"Controller aims: grenades", G_AIM),
-    T(L"Controller aims: spring razors", G_AIM),
-    T(L"Controller aims: carried objects", G_AIM),
-    T(L"Controller aims: Windblast, Possession, Swarm", G_AIM),
-
-    T(L"Pick up loot by reaching for it", G_HANDS),
-    T(L"Open doors by grabbing them", G_HANDS),
-    T(L"Carry and throw objects by grabbing", G_HANDS),
-    T(L"Use levers, switches and traps by grabbing", G_HANDS),
-    T(L"Game hands while mantling", G_HANDS),
-    T(L"Hide arms in takedowns", G_HANDS),
-    T(L"Game hands and arms in cinematics", G_HANDS),
-
-    C(L"D-pad modifier", 4, kDpad, G_CONTROLS),
-    T(L"D-pad on the right stick", G_CONTROLS),
-    T(L"X + Y pause chord", G_CONTROLS),
-    C(L"Quick save: Y +", 3, kPartner, G_CONTROLS),
-    C(L"Quick load: Y +", 3, kPartner, G_CONTROLS),
-    T(L"Y + right stick click opens F10", G_CONTROLS),
-
-    T(L"Suppress animation up/down tilt", G_CINE),
-    T(L"Suppress cinematic roll", G_CINE),
-    T(L"Suppress cinematic FOV zoom", G_CINE),
-    T(L"Cutscenes use the gameplay FOV", G_CINE),
-    T(L"Hide cinematic black borders", G_CINE),
-    T(L"Natural head look in lean and keyholes", G_CINE),
-
-    T(L"HUD on its own panels", G_HUD),
+    C(L"Dot hand", 2, kHand, G_AIM),
+    T(L"Hand aims all", G_AIM),
+    T(L"Grab loot", G_GRAB),
+    T(L"Grab doors", G_GRAB),
+    T(L"Grab objects", G_GRAB),
+    T(L"Grab levers", G_GRAB),
+    C(L"D-pad key", 4, kDpad, G_CONTROLS),
+    T(L"D-pad right", G_CONTROLS),
+    T(L"Pause X+Y", G_CONTROLS),
+    C(L"Save: Y+", 3, kPartner, G_CONTROLS),
+    C(L"Load: Y+", 3, kPartner, G_CONTROLS),
+    T(L"F10: Y+R3", G_CONTROLS),
 };
+// what each visible row drives (same order as g_items)
+static const int kRowId[] = {
+    RES, UPSCALE, UPSCALE_MODE, SHARPEN, FOV, MIRROR_OFF, RAIN_HIDE, HUD_PANELS,
+    CROUCH, SNAP, SNAP_ANGLE, POSTRACK, HEAD_MOVE,
+    DOT, LASER, RETICLE_HAND, AIM_ALL,
+    PICKUP, DOORS, CARRY, USABLES,
+    DPAD, DPAD_FLIP, PAUSE_CHORD, QUICK_SAVE, QUICK_LOAD, PANEL_CHORD,
+};
+static const int kRows = (int)(sizeof(g_items) / sizeof(g_items[0]));
+static_assert(sizeof(kRowId) / sizeof(kRowId[0]) == sizeof(g_items) / sizeof(g_items[0]), "one id per row");
+static_assert(sizeof(g_items) / sizeof(g_items[0]) <= 48, "the Mod Loader takes at most 48 entries");
 #undef T
 #undef C
 #undef S
@@ -173,6 +161,10 @@ static int get_value(int id)
     case CINE_BORDERS:   return b(CineBordersEnabled());
     case SPECIAL_HEAD:   return b(SpecialHeadEnabled());
     case HUD_PANELS:     return b(dvr::hudcap::enabled());
+    case AIM_ALL:        return b(FireAimEnabled() && g_blkDriveUI && InteractAimEnabled() && ThrowAimEnabled()
+                                  && GadgetAimEnabled() && CarryThrowAimEnabled() && PowerAimEnabled());
+    case UPSCALE:        return dvr::dlss::mode() == dvr::dlss::ModeOff ? 0
+                              : (dvr::dlss::backend() == dvr::dlss::BackendFsr ? 2 : 1);
     }
     return 0;
 }
@@ -284,6 +276,14 @@ static void apply(int id, int v)
     case SPECIAL_HEAD:   SpecialHeadSet(on); OvlSaveBool("Cine", "SpecialHeadLook", on); break;
 
     case HUD_PANELS:     dvr::hudcap::set_enabled(on); ConfigWriteKey("Hud", "Panel", s01(dvr::hudcap::enabled()), who); break;
+    case AIM_ALL:        // every controller-aim choice at once; F10 > Aim sets them one by one
+        for (int a : { AIM_FIRE, AIM_BLINK, AIM_INTERACT, AIM_THROW, AIM_GADGET, AIM_CARRY, AIM_POWERS }) apply(a, v);
+        break;
+    case UPSCALE:        // Off, DLSS or FSR in one choice
+        if (v <= 0) { apply(UPSCALE_ON, 0); break; }
+        apply(UPSCALER, v == 2 ? 1 : 0);
+        if (dvr::dlss::mode() == dvr::dlss::ModeOff) apply(UPSCALE_ON, 1);
+        break;
     }
 }
 
@@ -296,16 +296,17 @@ static void tick()
     }
 }
 
-static int  __cdecl menu_get(int id) { return get_value(id); }
-static void __cdecl menu_set(int id, int v)
+static int  __cdecl menu_get(int row) { return row >= 0 && row < kRows ? get_value(kRowId[row]) : 0; }
+static void __cdecl menu_set(int row, int v)
 {
-    if (id < 0 || id >= COUNT) return;
+    if (row < 0 || row >= kRows) return;
+    const int id = kRowId[row];
     InterlockedExchange(&g_pending[id], (LONG)v + 1);
     InterlockedExchange(&g_any, 1);
 }
 
 static const Menu kMenu = { sizeof(Menu), 3, 1 /* no master toggle: the VR mod is not switched off here */,
-                            COUNT, g_items, &menu_get, &menu_set, G_COUNT, kGroups };
+                            (uint32_t)kRows, g_items, &menu_get, &menu_set, G_COUNT, kGroups };
 
 static const Menu* query()
 {
@@ -316,7 +317,7 @@ static const Menu* query()
             if (!n || !MultiByteToWideChar(CP_UTF8, 0, n, -1, g_modeNames[i], 48)) wcscpy_s(g_modeNames[i], L"?");
             g_modeList[i] = g_modeNames[i];
         }
-        Log("modmenu: the Mod Loader plugin asked for the menu (%d entries in %d groups)", (int)COUNT, (int)G_COUNT);
+        Log("modmenu: the Mod Loader plugin asked for the menu (%d entries in %d groups)", kRows, (int)G_COUNT);
     }
     return &kMenu;
 }

@@ -7,7 +7,7 @@
 
 namespace {
 struct Info { const wchar_t* name; const wchar_t* description; const wchar_t* label; int enabledByDefault; };
-Info g_info = { L"Dishonored VR", L"VR settings. The F10 panel has the rest.", L"Dishonored VR", 1 };
+Info g_info = { L"Dishonored VR", L"Main VR settings. All settings: press F10 in game.", L"Dishonored VR", 1 };
 
 typedef const void* (__cdecl* QueryFn)();
 QueryFn vr_query()
