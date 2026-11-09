@@ -2335,7 +2335,7 @@ static void LoadConfig()
         GetPrivateProfileStringA("Controllers", key, "", v, sizeof(v), ini);
         return dvr::controller::parse_partner(v, def);
     };
-    dvr::controller::configure({int(GetPrivateProfileIntA("Controllers","DpadModifier",1,ini)),
+    dvr::controller::configure({int(GetPrivateProfileIntA("Controllers","DpadModifier",0,ini)),
         GetPrivateProfileIntA("Controllers","DpadFlip",0,ini)!=0,
         GetPrivateProfileIntA("Controllers","PauseChord",1,ini)!=0,
         QuickPartner("QuickSave",dvr::controller::PartnerA),QuickPartner("QuickLoad",dvr::controller::PartnerB),

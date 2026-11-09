@@ -14,7 +14,7 @@ enum Modifier { Off=0, RightRest=1, R3=2, LeftRest=4 }; // value3 retired: grips
 // or an elixir.
 enum Partner { NoPartner=0, PartnerA=1, PartnerB=2, PartnerX=3, PartnerY=4 };
 enum Quick { NoQuick=0, QuickSave=1, QuickLoad=2 };
-struct Config { int modifier=RightRest; bool flip=false, pauseChord=true; int quickSave=PartnerA, quickLoad=PartnerB; bool panelChord=true; };
+struct Config { int modifier=Off; bool flip=false, pauseChord=true; int quickSave=PartnerA, quickLoad=PartnerB; bool panelChord=true; };
 inline Config normalize(Config c) {
     if(c.modifier==3)c.modifier=Off; // old grip configs must never steal the wheel
     if(c.modifier<Off || c.modifier>LeftRest)c.modifier=RightRest;
