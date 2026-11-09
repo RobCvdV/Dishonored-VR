@@ -287,13 +287,26 @@ static void apply(int id, int v)
     }
 }
 
+// The Mod Loader also replays its own saved values (Mods\settings.dat, stored by row number) at
+// game start and on level loads. Those are not the player's choice: they are stale whenever F10
+// changed a setting since, or the rows moved between builds, and they once turned head-based
+// movement off at every start. The player can only reach the MODS menu from the pause menu, so a
+// write is honoured only while the game is paused over a live pawn ([game] state MENU).
 static void tick()
 {
     if (!InterlockedExchange(&g_any, 0)) return;
+    const bool paused = strcmp(g_dvrGameState, "MENU") == 0;
+    int dropped = 0;
     for (int i = 0; i < COUNT; ++i) {
         const LONG p = InterlockedExchange(&g_pending[i], 0);
-        if (p) apply(i, (int)(p - 1));
+        if (!p) continue;
+        if (!paused) { ++dropped; continue; }
+        if (get_value(i) == (int)(p - 1)) continue;   // unchanged: no write, no ini churn
+        apply(i, (int)(p - 1));
     }
+    if (dropped)
+        Log("modmenu: ignored %d value(s) the Mod Loader replayed outside the pause menu (state %s); "
+            "the VR settings file stays the source of truth", dropped, g_dvrGameState[0] ? g_dvrGameState : "startup");
 }
 
 static int  __cdecl menu_get(int row) { return row >= 0 && row < kRows ? get_value(kRowId[row]) : 0; }
